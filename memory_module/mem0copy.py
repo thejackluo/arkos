@@ -1,4 +1,5 @@
 from openai import OpenAI
+import os 
 from mem0 import Memory
 
 
@@ -10,7 +11,35 @@ client = OpenAI(
         )
 
 
-memory = Memory()
+
+
+os.environ["OPENAI_API_KEY"] = "sk"
+config = {
+    "vector_store": {
+        "provider": "faiss",
+        "config": {
+            "collection_name": "mem0",
+            "path": "/tmp/faiss_memories",
+            "distance_strategy": "euclidean"
+        }
+    },
+    "llm": {
+        "provider": "vllm",
+        "config": {
+            "model": "Qwen/Qewn2.5-7B-Instruct",
+            "vllm_base_url": "http://localhost:30000/v1",
+        },
+    },
+    "embedder": {
+        "provider": "huggingface",
+        "config": {
+            "huggingface_base_url": "http://localhost:4444/v1"
+        }
+    }
+    }
+
+memory = Memory.from_config(config)
+
 
 def chat_with_memories(message: str, user_id: str = "default_user") -> str:
     # Retrieve relevant memories
@@ -20,7 +49,7 @@ def chat_with_memories(message: str, user_id: str = "default_user") -> str:
     # Generate Assistant response
     system_prompt = f"You are a helpful AI. Answer the question based on query and memories.\nUser Memories:\n{memories_str}"
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
-    response = client.chat.completions.create(messages=messages)
+    response = client.chat.completions.create(model="Qwen/Qwen2.5-7B-Instruct", messages=messages)
     assistant_response = response.choices[0].message.content
 
     # Create new memories from the conversation
