@@ -22,6 +22,7 @@ add_tool = {"url": "https://localhost:3030", "parameters": None}
 tool_registry = {"keyA": multiply_tool, "embedding_b": add_tool}
 # TODO: add tool registry, navegable by directory
 
+MAX_RETRIES = 10
 
 class Agent:
     def __init__(
@@ -36,6 +37,9 @@ class Agent:
 
         self.tools = []
         self.tool_names = []
+
+
+        
 
     def bind_tool(tool):
 
@@ -116,42 +120,53 @@ class Agent:
 
         return next_state_name
 
-    def step(self, input: str):
-        messages_list = self.context["messages"]
-        # get first state from states
+    def step(self):
+        """
+        Runs the agent until reaching a terminal state or completion.
+        Returns the last AIMessage produced.
+        """
+
+        print("recieved message")
+        messages_list = self.context.get("messages", [])
         if not self.current_state:
-            self.current_state = flow.get_initial_state()
+            self.current_state = self.flow.get_initial_state()
 
+        last_ai_message = None
         
-        while not self.current_state.is_terminal:
 
-            # asumption run will always return a valid Messsage
-            updates = self.current_state.run(self.context["messages"], self)
-            if updates:
-                messages_list.append(updates)
+        retry_count=0 
+        while not self.current_state.is_terminal:
+            ### DEBUGGING
+
+            if retry_count > MAX_RETRIES:
+                break
+            retry_count += 1
+
+            ### DEBUGGING
+            print(self.current_state)
+            print(messages_list[-1])
+            update = self.current_state.run(messages_list, self)
+            if update:
+                messages_list.append(update)
+                if isinstance(update, AIMessage):
+                    last_ai_message = update
 
             if self.current_state.is_terminal:
-                return  # or break the loop
+                break
 
-
-            if self.current_state.check_transition_ready(self.context["messages"]):
-                # NOTE: get_transitions will return list of tuples (state, state description)
+            if self.current_state.check_transition_ready(messages_list):
                 transition_dict = self.flow.get_transitions(self.current_state, messages_list)
                 transition_names = transition_dict["tt"]
 
-                num_transitions = len(transition_names)
-                if num_transitions == 1: 
+                if len(transition_names) == 1:
                     next_state_name = transition_names[0]
-                    self.current_state = self.flow.get_state(next_state_name)
-                else: 
+                else:
+                    next_state_name = self.choose_transition(transition_dict, messages_list)
 
-                    next_state_name = self.choose_transition(transition_dict, self.context["messages"]) 
-
-                    next_state  = self.flow.get_state(next_state_name)
-
-                    self.current_state = next_state
-
+                self.current_state = self.flow.get_state(next_state_name)
             else:
-                raise ValueError("State Loop Failed, No next State agent.py")
+                break  # No transition ready, exit gracefully
+            
+        return last_ai_message
 
-        return
+

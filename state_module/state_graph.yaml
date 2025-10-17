@@ -3,7 +3,7 @@
 #   transition:
 #     user:
 
-initial: ask_user
+initial: agent_reply
 
 states:
   ask_user:

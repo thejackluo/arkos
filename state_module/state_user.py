@@ -9,25 +9,30 @@ from model_module.ArkModelNew import ArkModelLink, UserMessage, AIMessage, Syste
 from state_module.state import State
 from state_module.state_registry import register_state
 
-
 @register_state
 class StateUser(State):
     type = "user"
 
     def __init__(self, name: str, config: dict):
         super().__init__(name, config)
-        self.is_terminal = False
+        self.is_terminal = True
 
     def check_transition_ready(self, context):
         return True
 
     def run(self, context, agent=None):
+        return 
+        # Instead of input(), read last user message from context
+        user_messages = [m for m in context if isinstance(m, UserMessage)]
+        if not user_messages:
+            return None
 
-        user_input = input("You: ")
-        if user_input.strip().lower() == "exit":
-            print("safe_shutdown sequence initialized")
+        last_user_msg = user_messages[-1]
+        content = last_user_msg.content.strip()
+
+        if content.lower() == "exit":
             self.is_terminal = True
-            return
+            return None
 
-        else:
-            return UserMessage(content=user_input)
+        return last_user_msg
+
