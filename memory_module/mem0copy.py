@@ -16,11 +16,13 @@ client = OpenAI(
 os.environ["OPENAI_API_KEY"] = "sk"
 config = {
     "vector_store": {
-        "provider": "faiss",
+        "provider": "supabase",
         "config": {
-            "collection_name": "mem0",
-            "path": "/tmp/faiss_memories",
-            "distance_strategy": "euclidean"
+            # "connection_string": "postgresql://user:password@host:port/database",
+            "connection_string": "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:54322/postgres",
+            "collection_name": "memories",
+            "index_method": "hnsw",  # Optional: defaults to "auto"
+            "index_measure": "cosine_distance"  # Optional: defaults to "cosine_distance"
         }
     },
     "llm": {
@@ -41,7 +43,7 @@ config = {
 memory = Memory.from_config(config)
 
 
-def chat_with_memories(message: str, user_id: str = "default_user") -> str:
+def chat_with_memories(message: str, user_id: str = "root") -> str:
     # Retrieve relevant memories
     relevant_memories = memory.search(query=message, user_id=user_id, limit=3)
     memories_str = "\n".join(f"- {entry['memory']}" for entry in relevant_memories["results"])
