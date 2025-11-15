@@ -38,7 +38,12 @@ async def chat_completions(request: Request):
     messages = payload.get("messages", [])
     model = payload.get("model", "ark-agent")
     response_format = payload.get("response_format")
+        
 
+    if "messages" not in agent.context:
+        agent.context["messages"] = [
+            SystemMessage(content=SYSTEM_PROMPT)
+        ]
     # Convert OAI messages into internal message objects
     context_msgs = []
     for msg in messages:
@@ -51,12 +56,7 @@ async def chat_completions(request: Request):
         elif role == "assistant":
             context_msgs.append(AIMessage(content=content))
 
-    # Always ensure the system prompt is present
-    context_msgs.insert(0, SystemMessage(content=SYSTEM_PROMPT))
-
-    # Run the agent
-    agent.context["messages"] = context_msgs
-
+    agent.context["messages"].extend(context_msgs)
     # Run one agent step (can loop internally based on state)
 
 
