@@ -17,10 +17,10 @@ from agent_module.agent import Agent  # Assuming this is your agent.py's Agent c
 def run_cli_agent():
     # Initialize components (customize as needed)
     flow = StateHandler(yaml_path="../state_module/state_graph.yaml")  # Adjust path
-    memory = Memory(agent_id="cli-agent")
+    # memory = Memory(agent_id="cli-agent")
     llm = ArkModelLink(base_url="http://localhost:30000/v1")
 
-    agent = Agent(agent_id="cli-agent", flow=flow, memory=memory, llm=llm)
+    agent = Agent(agent_id="cli-agent", flow=flow, memory=None, llm=llm)
     ############## INITIALIZATION PROCEDURE
     default_message = SystemMessage(
         content="""You are ARK, a helpful assistant with memory and access to specific tools.
