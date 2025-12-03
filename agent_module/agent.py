@@ -74,8 +74,13 @@ class Agent:
 
         chat_model = self.llm
         if context:
-
-            llm_response = chat_model.generate_response(context, json_schema)
+            # FIX: Remove trailing assistant messages to avoid VLLM error
+            # VLLM doesn't allow add_generation_prompt when last message is from assistant
+            filtered_context = list(context)
+            while filtered_context and isinstance(filtered_context[-1], AIMessage):
+                filtered_context.pop()
+            
+            llm_response = chat_model.generate_response(filtered_context, json_schema)
 
         else:
             messages = [SystemMessage(content=input)]
