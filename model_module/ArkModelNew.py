@@ -1,4 +1,5 @@
 import json
+import os
 import pprint
 from typing import Any, AsyncIterator, Dict, List, Optional, Union
 
@@ -86,9 +87,11 @@ class ArkModelLink(BaseModel):
             - 'schema_result': A dictionary containing then result of the schema
             - 'message': The content of the LLM's text response.
         """
+        # Get API key from environment variable, fallback to default VLLM key
+        api_key = os.getenv("VLLM_API_KEY", "token-abc123")
         client = OpenAI(
             base_url=self.base_url,
-            api_key="-",
+            api_key=api_key,
         )
 
         # Convert custom Message objects into the format expected by the OpenAI API.
