@@ -18,9 +18,11 @@ from model_module.ArkModelNew import ArkModelLink, UserMessage, SystemMessage, A
 app = FastAPI(title="ArkOS Agent API", version="1.0.0")
 
 # Initialize the agent and dependencies once
-flow = StateHandler(yaml_path="../state_module/state_graph.yaml")
+# Fix: Use absolute path to avoid FileNotFoundError when running from different directories
+yaml_path = os.path.join(os.path.dirname(__file__), "..", "state_module", "state_graph.yaml")
+flow = StateHandler(yaml_path=os.path.abspath(yaml_path))
 memory = Memory(agent_id="ark-agent")
-llm = ArkModelLink(base_url="http://localhost:3333/v1")  # Your already OAI-compatible model
+llm = ArkModelLink(base_url="http://localhost:20000/v1")  # Your already OAI-compatible model
 agent = Agent(agent_id="ark-agent", flow=flow, memory=memory, llm=llm)
 
 # Default system prompt for the agent
