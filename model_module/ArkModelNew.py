@@ -51,7 +51,7 @@ class ArkModelLink(BaseModel):
     servers that expose an OpenAI-compatible API, supporting tool calling.
     """
 
-    model_name: str = Field(default="tgi")
+    model_name: str = Field(default="mistralai/Ministral-3-14B-Instruct-2512")
     base_url: str = Field(default="http://0.0.0.0:30000/v1")
     max_tokens: int = Field(default=1024)
     temperature: float = Field(default=0.7)

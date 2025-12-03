@@ -101,11 +101,25 @@ class Agent:
         context_text = [SystemMessage(content=prompt)] + messages
         output = self.call_llm(context=context_text, json_schema=json_schema)
         # print(output.content)
-        structured_output = json.loads(output.content)
-
-        # HANDLE ERROR GRACEFULL
-        if "error" in output.content:
-            raise ValueError("AGENT.PY FAILED LLM CALL")
+        
+        # FIX: Check if output.content is valid before parsing JSON
+        if not output or not output.content:
+            raise ValueError("LLM call returned empty response")
+        
+        # Check if it's an error message (starts with "Error:")
+        if output.content.startswith("Error:"):
+            raise ValueError(f"LLM call failed: {output.content}")
+        
+        # HANDLE ERROR GRACEFULLY - check for error before parsing
+        if "error" in output.content.lower():
+            raise ValueError(f"AGENT.PY FAILED LLM CALL: {output.content}")
+        
+        try:
+            structured_output = json.loads(output.content)
+        except json.JSONDecodeError as e:
+            # If JSON parsing fails, provide helpful error message
+            raise ValueError(f"Failed to parse LLM response as JSON: {output.content}. Error: {e}")
+        
         next_state_name = structured_output["next_state"]
 
         return next_state_name
