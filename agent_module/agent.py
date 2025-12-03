@@ -98,7 +98,13 @@ class Agent:
             },
         }
 
-        context_text = [SystemMessage(content=prompt)] + messages
+        # FIX: Remove trailing assistant messages to avoid VLLM error
+        # VLLM doesn't allow add_generation_prompt when last message is from assistant
+        filtered_messages = list(messages)
+        while filtered_messages and isinstance(filtered_messages[-1], AIMessage):
+            filtered_messages.pop()
+        
+        context_text = [SystemMessage(content=prompt)] + filtered_messages
         output = self.call_llm(context=context_text, json_schema=json_schema)
         # print(output.content)
         
