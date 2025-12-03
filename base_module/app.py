@@ -20,7 +20,7 @@ app = FastAPI(title="ArkOS Agent API", version="1.0.0")
 # Initialize the agent and dependencies once
 flow = StateHandler(yaml_path="../state_module/state_graph.yaml")
 memory = Memory(agent_id="ark-agent")
-llm = ArkModelLink(base_url="http://localhost:30000/v1")  # Your already OAI-compatible model
+llm = ArkModelLink(base_url="http://localhost:3333/v1")  # Your already OAI-compatible model
 agent = Agent(agent_id="ark-agent", flow=flow, memory=memory, llm=llm)
 
 # Default system prompt for the agent
