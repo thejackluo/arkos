@@ -33,16 +33,44 @@ The entire codebase is in Python, except for a few shell scripts. We use the fol
 
 ## Instructions
 
-### Start Inference Engine (SGLANG)
+### Quick Start (Hybrid Setup - Recommended)
+
+**Prerequisites:** SSH access to `ark.mit.edu` and an active SSH tunnel.
+
+1. **Set up SSH tunnel** (in one terminal):
+   ```bash
+   ssh -L 20000:localhost:20000 jack.ark@ark.mit.edu
+   ```
+   Keep this terminal open.
+
+2. **Start FastAPI server** (in another terminal):
+   ```bash
+   source venv/bin/activate
+   python base_module/app.py
+   ```
+
+3. **Test the server** (in a third terminal):
+   ```bash
+   source venv/bin/activate
+   python base_module/main_interface.py
+   ```
+
+### Alternative: Local SGLANG
+
+If you have Docker and GPU access locally:
 
 * Run latest SGLANG image
 * cmd: bash model_module/run.sh
 * Note: Qwen 2.5 is what is currently in use
+* Update `base_module/app.py` to use `http://localhost:30000/v1`
 
-### Test base_module
+### Current Configuration
 
-* cmd: python app.py 
-* cmd: python main_interface.py
+- **Model:** `mistralai/Ministral-3-14B-Instruct-2512` (VLLM on remote server)
+- **API Key:** Configured via `VLLM_API_KEY` environment variable (default: `token-abc123`)
+- **Base URL:** `http://localhost:20000/v1` (via SSH tunnel to remote VLLM)
+
+For detailed setup instructions, see [GETTING_STARTED.md](GETTING_STARTED.md).
 
 ## Contributors + contact
 
