@@ -16,11 +16,7 @@ from tool_module.tool import Tool
 from memory_module.memory import Memory
 
 
-
-multiply_tool = {"url": "https://localhost:4040", "parameters": None}
-add_tool = {"url": "https://localhost:3030", "parameters": None}
-tool_registry = {"keyA": multiply_tool, "embedding_b": add_tool}
-# TODO: add tool registry, navegable by directory
+MAX_ITER = 10
 
 
 class Agent:
@@ -46,6 +42,7 @@ class Agent:
         tool_name = tool.tool
         self.bind_tool(tool)
         self.tool_names.append(tool_name)
+
     def create_next_state_class(self, options: List[Tuple[str, str]]):
         """
         options: list of tuples (next_state, description of state)
@@ -55,15 +52,14 @@ class Agent:
 
         # Dynamically build an Enum of allowed states
         enum_dict = {state: state for state, desc in options}
-        
+
         # add desc into enum dict
         NextStateEnum = Enum("NextStateEnum", enum_dict)
 
         # Build the model with a single constrained field
         NextStateModel = create_model(
             "NextState",
-            next_state=(NextStateEnum, Field(..., description="The chosen next state"))
-
+            next_state=(NextStateEnum, Field(..., description="The chosen next state")),
         )
 
         return NextStateModel
@@ -92,17 +88,15 @@ class Agent:
         prompt = "given the following state transitions, and the preceeding context. output the most reasonable next state. do not use tool result to determine the next state"
         transition_tuples = list(zip(transitions_dict["tt"], transitions_dict["td"]))
 
-        # creates pydantic class and a model dump 
+        # creates pydantic class and a model dump
         NextStates = self.create_next_state_class(transition_tuples)
         json_schema = {
             "type": "json_schema",
-
             "json_schema": {
-                "name":  "class_options", 
-                "schema": NextStates.model_json_schema()
-            }
+                "name": "class_options",
+                "schema": NextStates.model_json_schema(),
+            },
         }
-
 
         context_text = [SystemMessage(content=prompt)] + messages
         output = self.call_llm(context=context_text, json_schema=json_schema)
@@ -112,46 +106,95 @@ class Agent:
         # HANDLE ERROR GRACEFULL
         if "error" in output.content:
             raise ValueError("AGENT.PY FAILED LLM CALL")
-        next_state_name  = structured_output["next_state"]
+        next_state_name = structured_output["next_state"]
 
         return next_state_name
 
-    def step(self, input: str):
-        messages_list = self.context["messages"]
-        # get first state from states
-        if not self.current_state:
-            self.current_state = flow.get_initial_state()
+    def step(self):
+        """
+        Runs the agent until reaching a terminal state or completion.
+        Returns the last AIMessage produced.
+        """
 
-        
+        print("recieved message")
+        messages_list = self.context.get("messages", [])
+        # if not self.current_state:
+        #     print("GETTINT INITIAL")
+        #     self.current_state = self.flow.get_initial_state()
+
+        last_ai_message = None
+
+        retry_count = 0
+        print(self.current_state)
+        print(self.current_state.is_terminal)
+
         while not self.current_state.is_terminal:
+            ### DEBUGGING
 
-            # asumption run will always return a valid Messsage
-            updates = self.current_state.run(self.context["messages"], self)
-            if updates:
-                messages_list.append(updates)
+            if retry_count > MAX_ITER:
+                print("MAX ITER REACHED")
+                break
+            retry_count += 1
+
+            ### DEBUGGING
+            print(self.current_state)
+            print("MSGS_LIST", messages_list[-1])
+            update = self.current_state.run(messages_list, self)
+            print("UPDATE", update)
+            if update:
+                messages_list.append(update)
+                if isinstance(update, AIMessage):
+                    last_ai_message = update
 
             if self.current_state.is_terminal:
-                return  # or break the loop
+                print("REACHED TERMINAL")
+                break
 
-
-            if self.current_state.check_transition_ready(self.context["messages"]):
-                # NOTE: get_transitions will return list of tuples (state, state description)
-                transition_dict = self.flow.get_transitions(self.current_state, messages_list)
+            if self.current_state.check_transition_ready(messages_list):
+                transition_dict = self.flow.get_transitions(
+                    self.current_state, messages_list
+                )
                 transition_names = transition_dict["tt"]
 
-                num_transitions = len(transition_names)
-                if num_transitions == 1: 
+                if len(transition_names) == 1:
                     next_state_name = transition_names[0]
-                    self.current_state = self.flow.get_state(next_state_name)
-                else: 
+                else:
+                    next_state_name = self.choose_transition(
+                        transition_dict, messages_list
+                    )
 
-                    next_state_name = self.choose_transition(transition_dict, self.context["messages"]) 
-
-                    next_state  = self.flow.get_state(next_state_name)
-
-                    self.current_state = next_state
+                self.current_state = self.flow.get_state(next_state_name)
 
             else:
-                raise ValueError("State Loop Failed, No next State agent.py")
+                print("REACHED NO NEXT STATE")
+                break  # No transition ready, exit gracefully
+        print("LAST_AI_MSG", last_ai_message)
+        self.current_state = self.flow.get_state("agent_reply")
+        return last_ai_message
 
-        return
+
+if __name__ == "__main__":
+
+    content = "how are you "
+
+    flow = StateHandler(yaml_path="../state_module/state_graph.yaml")
+    memory = Memory(agent_id="ark-agent")
+    llm = ArkModelLink(
+        base_url="http://localhost:30000/v1"
+    )  # Your already OAI-compatible model
+    test_agent = Agent(agent_id="ark-agent", flow=flow, memory=memory, llm=llm)
+    context_msgs = []
+
+    test_agent.context["messages"] = context_msgs
+
+    context_msgs.append(UserMessage(content="My name is Bill"))
+
+    context_msgs.append(AIMessage(content=test_agent.step().content))
+
+    context_msgs.append(UserMessage(content="What is my name"))
+
+    # print(test_agent.context["messages"])
+
+    context_msgs.append(AIMessage(content=test_agent.step().content))
+
+    # print(test_agent.context["messages"])

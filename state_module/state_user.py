@@ -1,13 +1,13 @@
 import os
 import sys
+from state_module.state import State
+from state_module.state_registry import register_state
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from model_module.ArkModelNew import ArkModelLink, UserMessage, AIMessage, SystemMessage
 
-from state_module.state import State
-from state_module.state_registry import register_state
 
 
 @register_state
@@ -16,18 +16,12 @@ class StateUser(State):
 
     def __init__(self, name: str, config: dict):
         super().__init__(name, config)
-        self.is_terminal = False
+        self.is_terminal = True  # Stop after this state
 
     def check_transition_ready(self, context):
+        # ALWAYS allow transition after user provides input
         return True
 
-    def run(self, context, agent=None):
+    def run(self, context):
 
-        user_input = input("You: ")
-        if user_input.strip().lower() == "exit":
-            print("safe_shutdown sequence initialized")
-            self.is_terminal = True
-            return
-
-        else:
-            return UserMessage(content=user_input)
+        return None
