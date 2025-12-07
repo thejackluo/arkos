@@ -55,7 +55,7 @@ class ArkREPL:
         user_id: Optional[str] = None,
         db_url: str = "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:54322/postgres",
         llm_base_url: str = "http://localhost:30000/v1",
-        state_graph_path: str = "../state_module/state_graph.yaml"
+        state_graph_path: Optional[str] = None
     ):
         """Initialize ARK REPL.
 
@@ -63,10 +63,21 @@ class ArkREPL:
             user_id: User ID (generates new if not provided)
             db_url: PostgreSQL connection string
             llm_base_url: LLM base URL
-            state_graph_path: Path to state graph YAML
+            state_graph_path: Path to state graph YAML (auto-detected if not provided)
         """
         self.console = console
         self.user_id = user_id or f"ark-user-{uuid.uuid4().hex[:8]}"
+
+        # Resolve state graph path if not provided
+        if state_graph_path is None:
+            # Get the directory where this script is located
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            # Go up one level to arkos root, then into state_module
+            state_graph_path = os.path.join(
+                os.path.dirname(script_dir),
+                "state_module",
+                "state_graph.yaml"
+            )
 
         # Initialize components
         self.console.print("\n[bold cyan]Initializing ARK OS...[/bold cyan]")
@@ -433,8 +444,8 @@ def main():
     parser.add_argument(
         "--state-graph",
         type=str,
-        default="../state_module/state_graph.yaml",
-        help="Path to state graph YAML"
+        default=None,
+        help="Path to state graph YAML (auto-detected if not provided)"
     )
 
     args = parser.parse_args()

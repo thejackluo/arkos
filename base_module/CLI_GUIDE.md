@@ -45,8 +45,10 @@ python base_module/ark_repl.py \
   --user-id alice \
   --db-url "postgresql://user:pass@localhost:5432/db" \
   --llm-url "http://localhost:8000/v1" \
-  --state-graph "../state_module/custom_graph.yaml"
+  --state-graph "/path/to/custom_graph.yaml"
 ```
+
+Note: The `--state-graph` parameter is optional and will auto-detect the default `state_graph.yaml` if not provided.
 
 ## Available Commands
 
