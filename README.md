@@ -24,6 +24,10 @@ The entire codebase is in Python, except for a few shell scripts.
 * **`psycopg2-binary>=2.9.11`** - PostgreSQL adapter for Python (binary distribution, no compilation required). Used for storing conversation context and long-term memory
 * **`mem0ai`** - Memory management library for vector-based memory storage and retrieval using Supabase
 
+### CLI & User Interface
+
+* **`rich>=13.7.0`** - Terminal formatting and rich text rendering for the enhanced CLI interface. Provides tables, progress bars, panels, and syntax highlighting
+
 ### Installation
 
 Install all dependencies using:
@@ -67,21 +71,43 @@ This will start the SGLang server on port 30000. The model Qwen/Qwen2.5-7B-Instr
 
 ### Running the Application
 
-You need to run both the API server and the test interface:
+ARK OS provides multiple interfaces for interaction:
 
-1. **Start the API server** (in one terminal):
-   ```bash
-   cd base_module
-   python app.py
-   ```
-   This starts the FastAPI server on port 1111, providing the `/v1/chat/completions` endpoint.
+#### Option 1: Enhanced CLI (Recommended)
 
-2. **Run the test interface** (in another terminal):
-   ```bash
-   cd base_module
-   python main_interface.py
-   ```
-   This provides an interactive CLI to test the agent. Type your messages and press Enter. Type `exit` or `quit` to stop.
+The enhanced CLI provides a rich terminal interface with real-time memory visualization:
+
+```bash
+python base_module/ark_repl.py
+```
+
+Features:
+- Real-time memory operation visualization
+- Interactive commands (/search, /stats, /memories, /context, etc.)
+- Rich terminal UI with tables and formatted output
+- Session management and performance tracking
+
+See [base_module/CLI_GUIDE.md](base_module/CLI_GUIDE.md) for full documentation and command reference.
+
+#### Option 2: Basic CLI
+
+Simple text-based interface for quick testing:
+
+```bash
+python base_module/main_interface.py
+```
+
+This provides a minimal interactive CLI. Type your messages and press Enter. Type `exit` or `quit` to stop.
+
+#### Option 3: API Server
+
+Start the FastAPI server for programmatic access:
+
+```bash
+python base_module/app.py
+```
+
+This starts the OpenAI-compatible API server on port 1111 at `/v1/chat/completions`.
 
 ## Contributors + contact
 
