@@ -100,43 +100,58 @@ This starts the SGLang server on port 30000 using Docker and GPU. Wait for "serv
 
 ### Running the Application
 
-ARK OS provides multiple interfaces for interaction:
+ARK OS provides two main ways to interact with the agent:
 
-#### Option 1: Enhanced CLI (Recommended)
+#### Option 1: Beautiful CLI Interface (Recommended) 🎨
 
-The enhanced CLI provides a rich terminal interface with real-time memory visualization:
-
-```bash
-python base_module/ark_repl.py
-```
-
-Features:
-- Real-time memory operation visualization
-- Interactive commands (/search, /stats, /memories, /context, etc.)
-- Rich terminal UI with tables and formatted output
-- Session management and performance tracking
-
-See [base_module/CLI_GUIDE.md](base_module/CLI_GUIDE.md) for full documentation and command reference.
-
-#### Option 2: Basic CLI
-
-Simple text-based interface for quick testing:
+The main interface provides a beautiful terminal experience powered by Rich:
 
 ```bash
 python base_module/main_interface.py
 ```
 
-This provides a minimal interactive CLI. Type your messages and press Enter. Type `exit` or `quit` to stop.
+This is the **primary interface** for ARK OS with a gorgeous terminal UI!
 
-#### Option 3: API Server
+**Features:**
+- 🎨 Beautiful Rich terminal UI with colors, panels, and tables
+- 💬 Direct agent interaction (no database required)
+- 📊 Real-time statistics and performance monitoring
+- 🔄 Conversation context management
+- ⚡ Interactive commands (/help, /context, /stats, /clear, /exit)
 
-Start the FastAPI server for programmatic access:
+**Commands:**
+- `/help` - Show help and commands
+- `/context` - View conversation history in a nice table
+- `/stats` - See session statistics and performance
+- `/clear` - Clear conversation and start fresh
+- `/exit` - Exit the CLI
+
+**API Client Mode:**
+
+If you have the API server running, connect to it with beautiful UI:
+
+```bash
+python base_module/main_interface.py --api
+```
+
+#### Option 2: API Server
+
+Start the FastAPI server for programmatic access or web integration:
 
 ```bash
 python base_module/app.py
 ```
 
 This starts the OpenAI-compatible API server on port 1111 at `/v1/chat/completions`.
+
+Then connect to it using:
+```bash
+python base_module/main_interface.py --api
+```
+
+---
+
+**Note on Memory:** The memory system (PostgreSQL + mem0ai) is currently disabled and planned as a future feature. The current interface works with simple in-memory context management, keeping things fast and simple.
 
 ## Contributors + contact
 
