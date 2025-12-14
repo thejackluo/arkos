@@ -6,6 +6,8 @@ Beautiful terminal interface for ARK OS featuring:
 - Simple conversation context management
 - Interactive commands for exploration
 - API client mode for connecting to running servers
+# Point to your running ArkOS agent
+client = OpenAI(base_url="http://localhost:1112/v1", api_key="not-needed")
 
 Run with:
     python base_module/main_interface.py              # Beautiful CLI (default)
