@@ -79,9 +79,7 @@ class Agent:
 
         chat_model = self.llm
 
-        print(context)
-        exit()
-     
+
         llm_response = chat_model.generate_response(context, json_schema)
 
             # else:
@@ -148,10 +146,9 @@ class Agent:
         #           "conversation_history": short_term_mem,
         # }
 
-        print("short term mem ", short_term_mem)
-        print("long term mem ", long_term_mem)
-        output = [long_term_mem].extend(short_term_mem)
+        output = [long_term_mem] + short_term_mem
 
+        
         return output
 
 
@@ -201,11 +198,7 @@ class Agent:
             # print("MSGS_LIST", messages_list[-1])
 
             context = self.get_context()
-            print("****** CONTEXT *****")
-            print(context)
-            print("*** AGENT.PY EOM *****")
             update = self.current_state.run(context, self)
-            print("UPDATE", update)
             if update:
                 # messages_list.append(update)
                 update_list = [update]
@@ -217,7 +210,8 @@ class Agent:
             if self.current_state.is_terminal:
                 print("REACHED TERMINAL")
                 break
-
+            
+            messages_list= self.memory.retrieve_short_memory(5)
             if self.current_state.check_transition_ready(messages_list):
 
                 transition_dict = self.flow.get_transitions(
