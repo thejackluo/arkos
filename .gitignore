@@ -1,6 +1,6 @@
 .DS_Store
 .env 
-/secrets
+/tool_module/secrets
 
 /model_module/models/*
 /model_module/data/*
