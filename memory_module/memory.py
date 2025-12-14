@@ -6,11 +6,17 @@ import psycopg2
 from typing import Dict, Any
 from mem0 import Memory as Mem0Memory
 import datetime
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from model_module.ArkModelNew import ArkModelLink, Message, UserMessage, AIMessage, SystemMessage, ToolMessage
-
-
+from model_module.ArkModelNew import (
+    ArkModelLink,
+    Message,
+    UserMessage,
+    AIMessage,
+    SystemMessage,
+    ToolMessage,
+)
 
 
 from typing import Type, Dict
@@ -103,8 +109,7 @@ class Memory:
         try:
 
             role = CLASS_TO_ROLE[type(message)]
-            
-            
+
             metadata = {
                 "user_id": self.user_id,
                 "session_id": self.session_id,
@@ -112,7 +117,9 @@ class Memory:
             }
 
             # store in mem0
-            self.mem0.add(messages=message.content, metadata=metadata, user_id=self.user_id)
+            self.mem0.add(
+                messages=message.content, metadata=metadata, user_id=self.user_id
+            )
 
             conn = psycopg2.connect(self.db_url)
             cur = conn.cursor()
@@ -131,12 +138,15 @@ class Memory:
 
         except Exception as e:
             import traceback
+
             traceback.print_exc()
             raise
             print(e)
             return False
 
-    def retrieve_long_memory(self, context: list = [], mem0_limit: int = 50) -> Dict[str, Any]:
+    def retrieve_long_memory(
+        self, context: list = [], mem0_limit: int = 50
+    ) -> Dict[str, Any]:
         """Retrieve relevant long term memories for the current user."""
         try:
             # Mem0 vector retrieval
@@ -145,8 +155,6 @@ class Memory:
 
             for message in context:
                 query += f" \n {message.content}"
-
-
 
             results = self.mem0.search(
                 query=query,
@@ -158,18 +166,16 @@ class Memory:
                 f"{r.get('role', 'user')}: {r['memory']}"
                 for r in results.get("results", [])
             ]
-            
 
             memory_string = "retrieved memories:\n" + "\n".join(memory_entries)
 
             return SystemMessage(content=memory_string)
-            
 
         except Exception as e:
             import traceback
+
             traceback.print_exc()
             raise
-
 
             return "retrieval_failed"
 
@@ -179,7 +185,7 @@ class Memory:
             conn = psycopg2.connect(self.db_url)
             cur = conn.cursor()
             cur.execute(
-            """
+                """
             SELECT role, message
             FROM (
                 SELECT id, role, message
@@ -190,28 +196,18 @@ class Memory:
             ) sub
             ORDER BY id ASC
             """,
-            (self.user_id, turns),
-        )
+                (self.user_id, turns),
+            )
 
             rows = cur.fetchall()
             cur.close()
             conn.close()
-            
-            return [
-                self.deserialize(message=msg, role=role)
-                for role, msg in rows
-            ]
+
+            return [self.deserialize(message=msg, role=role) for role, msg in rows]
 
         except Exception as e:
             print(e)
             return []
-        
-  
-
-        
-
-
-
 
 
 if __name__ == "__main__":
@@ -222,8 +218,11 @@ if __name__ == "__main__":
         db_url="postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:54322/postgres",
     )
 
-
-    print(test_instance.add_memory(SystemMessage(content="My favorite color is blue and I live in New York")))
+    print(
+        test_instance.add_memory(
+            SystemMessage(content="My favorite color is blue and I live in New York")
+        )
+    )
 
     context = test_instance.retrieve_short_memory(turns=2)
     print(context)

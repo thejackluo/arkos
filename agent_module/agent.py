@@ -34,10 +34,6 @@ class Agent:
         self.tools = []
         self.tool_names = []
 
-
-
-    
-
     def bind_tool(tool):
 
         self.tool.append(tool)
@@ -79,12 +75,11 @@ class Agent:
 
         chat_model = self.llm
 
-
         llm_response = chat_model.generate_response(context, json_schema)
 
-            # else:
-            #     messages = [SystemMessage(content=input)]
-            #     llm_response = chat_model.generate_response(messages, json_schema)
+        # else:
+        #     messages = [SystemMessage(content=input)]
+        #     llm_response = chat_model.generate_response(messages, json_schema)
 
         return AIMessage(content=llm_response)
 
@@ -105,7 +100,6 @@ class Agent:
 
         context_text = [SystemMessage(content=prompt)] + messages
         output = self.call_llm(context=context_text, json_schema=json_schema)
-        # print(output.content)
         structured_output = json.loads(output.content)
 
         # HANDLE ERROR GRACEFULL
@@ -114,6 +108,7 @@ class Agent:
         next_state_name = structured_output["next_state"]
 
         return next_state_name
+
     def add_context(self, messages):
         """
         processes incoming messages for memory module
@@ -121,26 +116,22 @@ class Agent:
 
         assert isinstance(messages, list), "agent.py messages not a list"
 
-
         for message in messages:
             self.memory.add_memory(message)
 
         return None
 
     def get_context(self, turns=5):
-        """ 
+        """
 
         wrap long term and short term into context window
-        output: list of messages 
+        output: list of messages
 
         """
 
-
-            
         short_term_mem = self.memory.retrieve_short_memory(turns)
 
         long_term_mem = self.memory.retrieve_long_memory(context=short_term_mem)
-
 
         # output = {"relevant_memories": long_term_mem,
         #           "conversation_history": short_term_mem,
@@ -148,12 +139,7 @@ class Agent:
 
         output = [long_term_mem] + short_term_mem
 
-        
         return output
-
-
-    
-        
 
     def step(self, messages):
         """
@@ -163,15 +149,11 @@ class Agent:
 
         # agent.context["messages"].extend(messages)
 
-
         ## process messages
 
         self.add_context(messages)
 
-
-
         print("recieved message")
-
 
         # messages_list = self.context.get("messages", [])
         # messages_list = self.memory.retrieve_memory()
@@ -202,16 +184,16 @@ class Agent:
             if update:
                 # messages_list.append(update)
                 update_list = [update]
-                self.add_context(update_list) # add update to memory
-            
+                self.add_context(update_list)  # add update to memory
+
                 if isinstance(update, AIMessage):
                     last_ai_message = update
 
             if self.current_state.is_terminal:
                 print("REACHED TERMINAL")
                 break
-            
-            messages_list= self.memory.retrieve_short_memory(5)
+
+            messages_list = self.memory.retrieve_short_memory(5)
             if self.current_state.check_transition_ready(messages_list):
 
                 transition_dict = self.flow.get_transitions(
